@@ -27,6 +27,24 @@ Events and their importance (represented by a score) are presented here:
 
 Fill in this section. Tell us how to start your service, how to query it, and how to run tests. Feel free to use your favorite Clojure libraries.
 
+To test run:
+
+lein test
+
+To run gorilla REPL where you can see my experiments:
+
+lein gorilla :port 8994
+
+Links to see what I did:
+
+http://localhost:8994/worksheet.html?filename=.\ws\rentpath-scoring-service.clj
+
+http://localhost:8994/worksheet.html?filename=.\ws\kafka-example.clj
+
+To run
+
+TBD
+
 ## Goals
 
 Using the above table for event types and their relative scores:
