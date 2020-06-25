@@ -37,13 +37,15 @@ lein gorilla :port 8994
 
 Links to see what I did:
 
-http://localhost:8994/worksheet.html?filename=.\ws\rentpath-scoring-service.clj
+http://localhost:8994/worksheet.html?filename=ws/rentpath-scoring-service.clj
 
-http://localhost:8994/worksheet.html?filename=.\ws\kafka-example.clj
+http://localhost:8994/worksheet.html?filename=ws\kafka-example.clj
 
-To run
+http://localhost:8994/worksheet.html?filename=ws\ring-swagger-example.clj
 
-TBD
+To run test service and open browser (this will be real service once I'm done):
+
+lein ring server
 
 ## Goals
 
