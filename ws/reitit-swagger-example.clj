@@ -1,7 +1,7 @@
 ;; gorilla-repl.fileformat = 1
 
 ;; **
-;;; # Gorilla REPL
+;;; # Reitit Swagger Example
 ;;; 
 ;;; Welcome to gorilla :-)
 ;;; 
@@ -161,6 +161,13 @@
 ;; @@
 (start)
 ;; @@
+;; ->
+;;; server running in port 3010
+;;; 
+;; <-
+;; =>
+;;; {"type":"html","content":"<span class='clj-nil'>nil</span>","value":"nil"}
+;; <=
 
 ;; @@
 
