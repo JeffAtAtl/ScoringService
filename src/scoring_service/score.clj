@@ -1,4 +1,4 @@
-(ns scoring-service.core
+(ns scoring-service.score
   (:require [tentacles.events :as gitapi]))
 
 (defn score-event-type

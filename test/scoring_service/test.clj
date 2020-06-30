@@ -1,10 +1,10 @@
 (ns scoring-service.test
   (:use [clojure.test])
-  (:use [scoring-service.core])
+  (:use [scoring-service.score])
   (:use [scoring-service.ring]))
 
 
-(deftest score-event-type-test 
+(deftest score-test 
   (testing "Score Event Type"
     (testing "PushEvent"
       (is (= 5 (score-event-type "PushEvent"))))
