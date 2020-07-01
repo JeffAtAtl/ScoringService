@@ -43,7 +43,7 @@ http://localhost:8994/worksheet.html?filename=ws/kafka-example.clj
 
 http://localhost:8994/worksheet.html?filename=ws/reitit-example.clj
 
-To run test service and open browser (this will be real service once I'm done):
+To run service and open browser (this will open up swagger UI):
 
 lein ring server
 
