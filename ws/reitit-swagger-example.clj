@@ -46,9 +46,18 @@
      :description "between 1-100"
      :swagger/default 10
      :reason "invalid number"}))
+
+(s/def ::login string?)
+(s/def ::score number?)
+(s/def ::map-item (s/keys :req-un [::login ::score]))
+(s/def ::result (s/coll-of ::map-item))
+
+;(s/valid? ::result [{:login "test" :score 7} {:login "me" :score 8}])
+
+(s/valid? ::map-item {:login "test" :score 1})
 ;; @@
 ;; =>
-;;; {"type":"html","content":"<span class='clj-keyword'>:reitit-swagger-example/results</span>","value":":reitit-swagger-example/results"}
+;;; {"type":"html","content":"<span class='clj-unkown'>false</span>","value":"false"}
 ;; <=
 
 ;; @@
@@ -167,6 +176,104 @@
 ;; <-
 ;; =>
 ;;; {"type":"html","content":"<span class='clj-nil'>nil</span>","value":"nil"}
+;; <=
+
+;; @@
+(def app
+  (http/ring-handler
+    (http/router
+      [["/swagger.json"
+        {:get {:no-doc true
+               :swagger {:info {:title "scoring-service-api"
+                                :description "Scoring Service with reitit-http"}}
+               :handler (swagger/create-swagger-handler)}}]
+
+       ["/api"
+        {:swagger {:tags ["scores"]}}
+
+        ["/scores"
+         {:get {:summary "get all scores"
+                :responses {200 {:body {:result ::result}}}
+                :handler (fn []
+                           {:status 200
+                            :body {:result (scores)}})}}]
+
+        ["/score"
+         {:get {:summary "get score for specific github login."
+                :parameters {:query {:login string?}}
+                :responses {200 {:body {:result ::map-item}}}
+                :handler (fn [{{{:keys [login]} :query} :parameters}]
+                           {:status 200
+                            :body {:result (score login)}})}}]]]
+      ;; router data effecting all routes
+      {:exception pretty/exception
+       :data {:coercion reitit.coercion.spec/coercion
+              :muuntaja m/instance
+              :interceptors [;; swagger feature
+                             swagger/swagger-feature
+                             ;; query-params & form-params
+                             (parameters/parameters-interceptor)
+                             ;; content-negotiation
+                             (muuntaja/format-negotiate-interceptor)
+                             ;; encoding response body
+                             (muuntaja/format-response-interceptor)
+                             ;; exception handling
+                             (exception/exception-interceptor)
+                             ;; decoding request body
+                             (muuntaja/format-request-interceptor)
+                             ;; coercing response bodys
+                             (coercion/coerce-response-interceptor)
+                             ;; coercing request parameters
+                             (coercion/coerce-request-interceptor)
+                             ;; multipart
+                             (multipart/multipart-interceptor)]}})
+    (ring/routes
+      (swagger-ui/create-swagger-ui-handler
+        {:path "/"
+         :config {:validatorUrl nil
+                  :operationsSorter "alpha"}})
+      (ring/create-default-handler))
+    {:executor sieppari/executor}))
+;; @@
+;; =>
+;;; {"type":"html","content":"<span class='clj-var'>#&#x27;reitit-swagger-example/app</span>","value":"#'reitit-swagger-example/app"}
+;; <=
+
+;; @@
+(defn scores
+  []
+  [{:login "test" :score 7} {:login "me" :score 8}])
+;; @@
+;; =>
+;;; {"type":"html","content":"<span class='clj-var'>#&#x27;reitit-swagger-example/scores</span>","value":"#'reitit-swagger-example/scores"}
+;; <=
+
+;; @@
+(defn score
+  [login]
+  {:login login :score 7})
+;; @@
+;; =>
+;;; {"type":"html","content":"<span class='clj-var'>#&#x27;reitit-swagger-example/score</span>","value":"#'reitit-swagger-example/score"}
+;; <=
+
+;; @@
+(app {:request-method :get
+      :uri "/api/scores"
+     })
+;; @@
+;; =>
+;;; {"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:status</span>","value":":status"},{"type":"html","content":"<span class='clj-long'>500</span>","value":"500"}],"value":"[:status 500]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:body</span>","value":":body"},{"type":"html","content":"<span class='clj-unkown'>#object[java.io.ByteArrayInputStream 0x30771382 &quot;java.io.ByteArrayInputStream@30771382&quot;]</span>","value":"#object[java.io.ByteArrayInputStream 0x30771382 \"java.io.ByteArrayInputStream@30771382\"]"}],"value":"[:body #object[java.io.ByteArrayInputStream 0x30771382 \"java.io.ByteArrayInputStream@30771382\"]]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:headers</span>","value":":headers"},{"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-string'>&quot;Content-Type&quot;</span>","value":"\"Content-Type\""},{"type":"html","content":"<span class='clj-string'>&quot;application/json; charset=utf-8&quot;</span>","value":"\"application/json; charset=utf-8\""}],"value":"[\"Content-Type\" \"application/json; charset=utf-8\"]"}],"value":"{\"Content-Type\" \"application/json; charset=utf-8\"}"}],"value":"[:headers {\"Content-Type\" \"application/json; charset=utf-8\"}]"}],"value":"{:status 500, :body #object[java.io.ByteArrayInputStream 0x30771382 \"java.io.ByteArrayInputStream@30771382\"], :headers {\"Content-Type\" \"application/json; charset=utf-8\"}}"}
+;; <=
+
+;; @@
+(app {:request-method :get
+      :uri "/api/score"
+      :query-params {:login "test"}
+     })
+;; @@
+;; =>
+;;; {"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:status</span>","value":":status"},{"type":"html","content":"<span class='clj-long'>200</span>","value":"200"}],"value":"[:status 200]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:body</span>","value":":body"},{"type":"html","content":"<span class='clj-unkown'>#object[java.io.ByteArrayInputStream 0x6c17e09d &quot;java.io.ByteArrayInputStream@6c17e09d&quot;]</span>","value":"#object[java.io.ByteArrayInputStream 0x6c17e09d \"java.io.ByteArrayInputStream@6c17e09d\"]"}],"value":"[:body #object[java.io.ByteArrayInputStream 0x6c17e09d \"java.io.ByteArrayInputStream@6c17e09d\"]]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:headers</span>","value":":headers"},{"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-string'>&quot;Content-Type&quot;</span>","value":"\"Content-Type\""},{"type":"html","content":"<span class='clj-string'>&quot;application/json; charset=utf-8&quot;</span>","value":"\"application/json; charset=utf-8\""}],"value":"[\"Content-Type\" \"application/json; charset=utf-8\"]"}],"value":"{\"Content-Type\" \"application/json; charset=utf-8\"}"}],"value":"[:headers {\"Content-Type\" \"application/json; charset=utf-8\"}]"}],"value":"{:status 200, :body #object[java.io.ByteArrayInputStream 0x6c17e09d \"java.io.ByteArrayInputStream@6c17e09d\"], :headers {\"Content-Type\" \"application/json; charset=utf-8\"}}"}
 ;; <=
 
 ;; @@

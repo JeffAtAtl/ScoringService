@@ -19,11 +19,11 @@
 
 (deftest scoring-service-test
   (testing "Test ring handler"
-    (testing "api/math endpoint"
-      (is (= {:status 200, :body {:total 3}} 
-             (scoring-service-handler {:request-method :get
-                                       :uri "/api/math"
-                                       :query-params {:x "1", :y "2"}}))))))
+    (testing "api/score endpoint"
+      (is (= 200 
+             (:status (scoring-service-handler {:request-method :get
+                                       :uri "/api/score"
+                                       :query-params {:login "test"}})))))))
 
 
          
