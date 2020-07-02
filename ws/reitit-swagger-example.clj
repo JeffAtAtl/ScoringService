@@ -12,6 +12,7 @@
 
 ;; @@
 (ns reitit-swagger-example
+  (:use scoring-service.score)
   (:require [reitit.ring :as ring]
             [reitit.http :as http]
             [reitit.coercion.spec]
@@ -47,17 +48,10 @@
      :swagger/default 10
      :reason "invalid number"}))
 
-(s/def ::login string?)
-(s/def ::score number?)
-(s/def ::map-item (s/keys :req-un [::login ::score]))
-(s/def ::result (s/coll-of ::map-item))
 
-;(s/valid? ::result [{:login "test" :score 7} {:login "me" :score 8}])
-
-(s/valid? ::map-item {:login "test" :score 1})
 ;; @@
 ;; =>
-;;; {"type":"html","content":"<span class='clj-unkown'>false</span>","value":"false"}
+;;; {"type":"html","content":"<span class='clj-keyword'>:reitit-swagger-example/results</span>","value":":reitit-swagger-example/results"}
 ;; <=
 
 ;; @@
@@ -179,6 +173,37 @@
 ;; <=
 
 ;; @@
+(s/def ::login string?)
+(s/def ::map-item (s/keys :req-un [::login ::score]))
+(s/def ::result (s/coll-of ::map-item))
+
+;(s/valid? ::result [{:login "test" :score 7} {:login "me" :score 8}])
+
+(s/valid? ::map-item {:login "test" :score 1})
+;; @@
+;; =>
+;;; {"type":"html","content":"<span class='clj-unkown'>true</span>","value":"true"}
+;; <=
+
+;; @@
+#_(defn scores
+  [limit]
+  (take limit [{:login "test" :score 7} {:login "me" :score 8}]))
+;; @@
+;; =>
+;;; {"type":"html","content":"<span class='clj-var'>#&#x27;reitit-swagger-example/scores</span>","value":"#'reitit-swagger-example/scores"}
+;; <=
+
+;; @@
+#_(defn score
+  [login]
+  {:login login :score 7})
+;; @@
+;; =>
+;;; {"type":"html","content":"<span class='clj-var'>#&#x27;reitit-swagger-example/score</span>","value":"#'reitit-swagger-example/score"}
+;; <=
+
+;; @@
 (def app
   (http/ring-handler
     (http/router
@@ -193,10 +218,11 @@
 
         ["/scores"
          {:get {:summary "get all scores"
+                :parameters {:query {:limit number?}}
                 :responses {200 {:body {:result ::result}}}
-                :handler (fn []
+                :handler (fn [{{{:keys [limit]} :query} :parameters}]
                            {:status 200
-                            :body {:result (scores)}})}}]
+                            :body {:result (scores limit)}})}}]
 
         ["/score"
          {:get {:summary "get score for specific github login."
@@ -240,30 +266,13 @@
 ;; <=
 
 ;; @@
-(defn scores
-  []
-  [{:login "test" :score 7} {:login "me" :score 8}])
-;; @@
-;; =>
-;;; {"type":"html","content":"<span class='clj-var'>#&#x27;reitit-swagger-example/scores</span>","value":"#'reitit-swagger-example/scores"}
-;; <=
-
-;; @@
-(defn score
-  [login]
-  {:login login :score 7})
-;; @@
-;; =>
-;;; {"type":"html","content":"<span class='clj-var'>#&#x27;reitit-swagger-example/score</span>","value":"#'reitit-swagger-example/score"}
-;; <=
-
-;; @@
 (app {:request-method :get
       :uri "/api/scores"
+      :query-params {:limit 2}
      })
 ;; @@
 ;; =>
-;;; {"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:status</span>","value":":status"},{"type":"html","content":"<span class='clj-long'>500</span>","value":"500"}],"value":"[:status 500]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:body</span>","value":":body"},{"type":"html","content":"<span class='clj-unkown'>#object[java.io.ByteArrayInputStream 0x30771382 &quot;java.io.ByteArrayInputStream@30771382&quot;]</span>","value":"#object[java.io.ByteArrayInputStream 0x30771382 \"java.io.ByteArrayInputStream@30771382\"]"}],"value":"[:body #object[java.io.ByteArrayInputStream 0x30771382 \"java.io.ByteArrayInputStream@30771382\"]]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:headers</span>","value":":headers"},{"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-string'>&quot;Content-Type&quot;</span>","value":"\"Content-Type\""},{"type":"html","content":"<span class='clj-string'>&quot;application/json; charset=utf-8&quot;</span>","value":"\"application/json; charset=utf-8\""}],"value":"[\"Content-Type\" \"application/json; charset=utf-8\"]"}],"value":"{\"Content-Type\" \"application/json; charset=utf-8\"}"}],"value":"[:headers {\"Content-Type\" \"application/json; charset=utf-8\"}]"}],"value":"{:status 500, :body #object[java.io.ByteArrayInputStream 0x30771382 \"java.io.ByteArrayInputStream@30771382\"], :headers {\"Content-Type\" \"application/json; charset=utf-8\"}}"}
+;;; {"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:status</span>","value":":status"},{"type":"html","content":"<span class='clj-long'>200</span>","value":"200"}],"value":"[:status 200]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:body</span>","value":":body"},{"type":"html","content":"<span class='clj-unkown'>#object[java.io.ByteArrayInputStream 0x324bc5fe &quot;java.io.ByteArrayInputStream@324bc5fe&quot;]</span>","value":"#object[java.io.ByteArrayInputStream 0x324bc5fe \"java.io.ByteArrayInputStream@324bc5fe\"]"}],"value":"[:body #object[java.io.ByteArrayInputStream 0x324bc5fe \"java.io.ByteArrayInputStream@324bc5fe\"]]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:headers</span>","value":":headers"},{"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-string'>&quot;Content-Type&quot;</span>","value":"\"Content-Type\""},{"type":"html","content":"<span class='clj-string'>&quot;application/json; charset=utf-8&quot;</span>","value":"\"application/json; charset=utf-8\""}],"value":"[\"Content-Type\" \"application/json; charset=utf-8\"]"}],"value":"{\"Content-Type\" \"application/json; charset=utf-8\"}"}],"value":"[:headers {\"Content-Type\" \"application/json; charset=utf-8\"}]"}],"value":"{:status 200, :body #object[java.io.ByteArrayInputStream 0x324bc5fe \"java.io.ByteArrayInputStream@324bc5fe\"], :headers {\"Content-Type\" \"application/json; charset=utf-8\"}}"}
 ;; <=
 
 ;; @@
@@ -273,7 +282,7 @@
      })
 ;; @@
 ;; =>
-;;; {"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:status</span>","value":":status"},{"type":"html","content":"<span class='clj-long'>200</span>","value":"200"}],"value":"[:status 200]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:body</span>","value":":body"},{"type":"html","content":"<span class='clj-unkown'>#object[java.io.ByteArrayInputStream 0x6c17e09d &quot;java.io.ByteArrayInputStream@6c17e09d&quot;]</span>","value":"#object[java.io.ByteArrayInputStream 0x6c17e09d \"java.io.ByteArrayInputStream@6c17e09d\"]"}],"value":"[:body #object[java.io.ByteArrayInputStream 0x6c17e09d \"java.io.ByteArrayInputStream@6c17e09d\"]]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:headers</span>","value":":headers"},{"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-string'>&quot;Content-Type&quot;</span>","value":"\"Content-Type\""},{"type":"html","content":"<span class='clj-string'>&quot;application/json; charset=utf-8&quot;</span>","value":"\"application/json; charset=utf-8\""}],"value":"[\"Content-Type\" \"application/json; charset=utf-8\"]"}],"value":"{\"Content-Type\" \"application/json; charset=utf-8\"}"}],"value":"[:headers {\"Content-Type\" \"application/json; charset=utf-8\"}]"}],"value":"{:status 200, :body #object[java.io.ByteArrayInputStream 0x6c17e09d \"java.io.ByteArrayInputStream@6c17e09d\"], :headers {\"Content-Type\" \"application/json; charset=utf-8\"}}"}
+;;; {"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:status</span>","value":":status"},{"type":"html","content":"<span class='clj-long'>200</span>","value":"200"}],"value":"[:status 200]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:body</span>","value":":body"},{"type":"html","content":"<span class='clj-unkown'>#object[java.io.ByteArrayInputStream 0x649f49ef &quot;java.io.ByteArrayInputStream@649f49ef&quot;]</span>","value":"#object[java.io.ByteArrayInputStream 0x649f49ef \"java.io.ByteArrayInputStream@649f49ef\"]"}],"value":"[:body #object[java.io.ByteArrayInputStream 0x649f49ef \"java.io.ByteArrayInputStream@649f49ef\"]]"},{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-keyword'>:headers</span>","value":":headers"},{"type":"list-like","open":"<span class='clj-map'>{</span>","close":"<span class='clj-map'>}</span>","separator":", ","items":[{"type":"list-like","open":"","close":"","separator":" ","items":[{"type":"html","content":"<span class='clj-string'>&quot;Content-Type&quot;</span>","value":"\"Content-Type\""},{"type":"html","content":"<span class='clj-string'>&quot;application/json; charset=utf-8&quot;</span>","value":"\"application/json; charset=utf-8\""}],"value":"[\"Content-Type\" \"application/json; charset=utf-8\"]"}],"value":"{\"Content-Type\" \"application/json; charset=utf-8\"}"}],"value":"[:headers {\"Content-Type\" \"application/json; charset=utf-8\"}]"}],"value":"{:status 200, :body #object[java.io.ByteArrayInputStream 0x649f49ef \"java.io.ByteArrayInputStream@649f49ef\"], :headers {\"Content-Type\" \"application/json; charset=utf-8\"}}"}
 ;; <=
 
 ;; @@

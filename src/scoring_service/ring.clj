@@ -1,4 +1,5 @@
 (ns scoring-service.ring
+  (:use scoring-service.score)
   (:require [reitit.ring :as ring]
             [reitit.http :as http]
             [reitit.coercion.spec]
@@ -22,14 +23,6 @@
 (s/def ::map-item (s/keys :req-un [::login ::score]))
 (s/def ::result (s/coll-of ::map-item))
 
-(defn scores
-  []
-  [{:login "test" :score 7} {:login "me" :score 8}])
-
-(defn score
-  [login]
-  {:login login :score 7})
-
 (def scoring-service-handler
   (http/ring-handler
     (http/router
@@ -44,10 +37,11 @@
 
         ["/scores"
          {:get {:summary "get all scores"
+                :parameters {:query {:limit number?}}
                 :responses {200 {:body {:result ::result}}}
-                :handler (fn []
+                :handler (fn [{{{:keys [limit]} :query} :parameters}]
                            {:status 200
-                            :body {:result (scores)}})}}]
+                            :body {:result (scores limit)}})}}]
 
         ["/score"
          {:get {:summary "get score for specific github login."

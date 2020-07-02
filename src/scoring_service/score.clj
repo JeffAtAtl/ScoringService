@@ -12,4 +12,29 @@
                         
         score (get event-score-map t 1)]
     score))
-    
+
+(defn scores
+  "Makes a direct api call to GitHub to get the last 100 public events and scores them by login. Sorts by score in reverse order and imits results."
+  [limit]
+  (->> (gitapi/events {:per-page 100})
+       (map (juxt (comp :login :actor) 
+                  (comp score-event-type :type)))
+       (group-by first)
+       (map (juxt key
+                  (comp #(reduce + %) #(map second %) val)))
+       (sort-by second)
+       reverse
+       (map #(zipmap [:login :score] %))
+       (take limit)
+       ))
+
+(defn score
+  "Makes a direct api call to GitHub to get performed public events for a specific login."
+  [login]
+  (let [score (->> (gitapi/performed-events login)
+                   (map (comp score-event-type :type))
+                   (reduce +)
+                   )]
+    {:login login :score score}
+    ))
+
